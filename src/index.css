@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* input radio 타입 스타일 변경 */
+
 /* 로고 애니메이션 */
 @keyframes flip-scale-up-diag-1 {
   0% {
