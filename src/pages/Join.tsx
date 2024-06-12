@@ -30,15 +30,20 @@ const users: User[] = [
 ]; */
 
 interface IJoinForm {
-  email: string;
-  nickname: string;
+  loginId: string;
   password: string;
-  password2: string;
-  token?: string;
+  passwordConfirm?: string;
+  firstName: string;
+  lastName?: string;
+  gender: string;
+  nickname: string;
+  birthDay: string;
+  email?: string;
+  authCode: string;
 }
 
 export interface MutationResult {
-  code: number; //반환 성공 여부를 임의로 설정
+  code?: number; //일단 수정대기, 쓰이지 않으면 삭제할 것
   message?: string;
   dadt?: string | null;
 }
@@ -60,54 +65,59 @@ function Join() {
   };
 
   const [emailCheck, { data: emailCheckData, loading: emailCheckLoading }] =
-    useMutation<MutationResult>("/api/v1/member/verify-authCode");
+    useMutation<MutationResult>("/api/v1/member/send-authCode");
   const [cofirmEmail, setCofirmEmail] = useState(false);
 
-  const [tokenConfirm, { data: tokenData, loading: tokenLoading }] =
-    useMutation<MutationResult>("/api/users/token");
-  const [cofirmToken, setCofirmToken] = useState(false);
+  const [authCodeCheck, { data: authCodeData, loading: authCodeLoading }] =
+    useMutation<MutationResult>("/api/v1/member/verify-authCode");
+  const [cofirmAuthCode, setCofirmAuthCode] = useState(false);
 
   const [
     nicknameCheck,
     { data: nicknameCheckData, loading: nicknameCheckLoading },
-  ] = useMutation<MutationResult>("/api/users");
+  ] = useMutation<MutationResult>("/api/v1/member/me");
   const [cofirmNickname, setCofirmNickname] = useState(false);
 
-  //email버튼을 클릭 후 서버의 이메일과 일치하는지 체크
+  //email버튼을 클릭하고 사용가능 이메일 여부 체크
+  //가입된 이메일 존재하는지 체크? 서버에서 체크하는게 좋을듯
   const onEmailConfirm = async () => {
     if (emailCheckLoading) return;
     const email = getValues("email");
     await emailCheck({ email });
+    setCofirmAuthCode(false);
   };
   useEffect(() => {
-    if (emailCheckData?.code === 400) {
+    if (emailCheckData?.code !== 200) {
       setError("email", { message: emailCheckData?.message });
-      setValue("token", "");
-      setCofirmToken(false);
+      setValue("authCode", "");
+      setCofirmAuthCode(false);
       setCofirmEmail(false);
-    } else if (emailCheckData) {
+    } else if (emailCheckData?.code === 200) {
       setCofirmEmail(true);
       clearErrors("email");
     }
   }, [emailCheckData, setError]);
 
-  //토큰 인증 체크
-  const onTokenConfirm = async () => {
-    const token = getValues("token");
-    if (tokenLoading) return;
-    await tokenConfirm({ token });
+  //인증코드 체크
+  const onauthCodeCheck = async () => {
+    const email = getValues("email");
+    const authCode = getValues("authCode");
+    if (authCodeLoading) return;
+    await authCodeCheck({ email, authCode });
+    setValue("authCode", "");
   };
   useEffect(() => {
-    if (tokenData?.code === 400) {
-      setCofirmToken(false);
-      setError("token", { message: tokenData?.message });
-    } else if (tokenData?.code === 200) {
+    if (authCodeData?.code !== 200) {
+      setCofirmAuthCode(false);
+      setError("authCode", { message: authCodeData?.message });
+    } else if (authCodeData?.code === 200) {
       setCofirmEmail(false);
-      setCofirmToken(true);
+      setCofirmAuthCode(true);
     }
-  }, [tokenData, setError]);
+  }, [authCodeData, setError]);
 
   //닉네임 중복 확인
+  //중복체크 api가 없음
   const onNicknameConfirm = async () => {
     const nickname = getValues("nickname");
     if (nickname.length > 5) {
@@ -119,7 +129,7 @@ function Join() {
     await nicknameCheck({ nickname });
   };
   useEffect(() => {
-    if (nicknameCheckData?.code === 403) {
+    if (nicknameCheckData?.code !== 200) {
       setCofirmNickname(false);
       setError("nickname", { message: nicknameCheckData?.message });
     } else if (nicknameCheckData?.code === 200) {
@@ -129,23 +139,23 @@ function Join() {
   }, [nicknameCheckData, setError]);
 
   //회원가입 승인
-  const buttonReady = cofirmNickname && !cofirmEmail && cofirmToken;
+  const buttonReady = cofirmNickname && !cofirmEmail && cofirmAuthCode;
   const [join, { data: joinData, loading: joinLoading }] =
-    useMutation<MutationResult>("/api/users/join");
+    useMutation<MutationResult>("/api/v1/member/join");
   const onJoinSubmit = ({
     email,
     nickname,
     password,
-    password2,
+    passwordConfirm,
   }: IJoinForm) => {
     if (!buttonReady) return;
-    if (password !== password2) {
-      setError("password2", { message: "비밀번호가 일치하지 않습니다." });
+    if (password !== passwordConfirm) {
+      setError("passwordConfirm", { message: "비밀번호가 일치하지 않습니다." });
       return;
     }
     if (joinLoading) return;
 
-    join({ email, nickname, password, password2 });
+    join({ email, nickname, password, passwordConfirm });
   };
   useEffect(() => {
     if (joinData?.code === 401) {
@@ -193,14 +203,16 @@ function Join() {
           {cofirmEmail ? (
             <>
               <label className="font-semibold" htmlFor="token">
-                토큰:{" "}
-                {errors.token && (
-                  <span className="text-red-500">{errors.token.message}</span>
+                인증코드:{" "}
+                {errors.authCode && (
+                  <span className="text-red-500">
+                    {errors.authCode.message}
+                  </span>
                 )}
               </label>
               <div className="mb-16 space-x-2">
                 <input
-                  {...register("token", { required: true })}
+                  {...register("authCode", { required: true })}
                   className="w-3/6 h-9"
                   id="token"
                   type="password"
@@ -208,17 +220,17 @@ function Join() {
                   placeholder="토큰을 입력해주세요."
                 />
                 <button
-                  onClick={onTokenConfirm}
+                  onClick={onauthCodeCheck}
                   className={`${btnBase} bg-white`}
                 >
-                  토큰 확인
+                  인증코드 확인
                 </button>
               </div>
             </>
           ) : null}
-          {cofirmToken ? (
+          {cofirmAuthCode ? (
             <span className="mb-16 font-semibold">
-              토큰 인증이 완료되었습니다.
+              이메일 인증이 완료되었습니다.
             </span>
           ) : null}
           <label className="font-semibold" htmlFor="nickname">
@@ -247,6 +259,44 @@ function Join() {
               닉네임 중복 확인
             </button>
           </div>
+          <label className="font-semibold" htmlFor="first">
+            이름:{" "}
+            {errors.firstName && (
+              <span className="text-red-500">{errors.firstName.message}</span>
+            )}
+          </label>
+          <input
+            {...register("firstName", {
+              required: true,
+            })}
+            className="mb-16 h-9"
+            id="first"
+            required
+            placeholder="이름은 필수 항목입니다."
+          />
+          <label className="font-semibold" htmlFor="last">
+            성:
+          </label>
+          <input
+            {...register("lastName", {
+              required: true,
+            })}
+            className="mb-16 h-9"
+            id="last"
+            required
+            placeholder="이름을 입력해주세요."
+          />
+          <fieldset>
+            <legend>성별</legend>
+
+            <input type="radio" id="male" />
+            <label htmlFor="male">남성</label>
+            <br />
+
+            <input type="radio" id="female" />
+            <label htmlFor="female">여성</label>
+            <br />
+          </fieldset>
           <label className="font-semibold" htmlFor="pass">
             비밀번호:{" "}
             {errors.password && (
@@ -271,14 +321,14 @@ function Join() {
 
           <label className="font-semibold" htmlFor="pass2">
             비밀번호 확인:{" "}
-            {errors?.password2 && (
+            {errors?.passwordConfirm && (
               <span className="w-full mb-3 text-center text-red-500">
-                {errors.password2.message}
+                {errors.passwordConfirm.message}
               </span>
             )}
           </label>
           <input
-            {...register("password2", {
+            {...register("passwordConfirm", {
               required: "비밀번호 확인은 필수 항목입니다.",
             })}
             className="mb-24 h-9"

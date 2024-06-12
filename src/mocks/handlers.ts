@@ -15,23 +15,20 @@ export interface User {
 const users: User[] = [
   {
     loginId: "rlaugs15@naver.com",
+    nickname: "Bam",
     password: "rlaguswns123!!",
     firstName: "현준",
     lastName: "김",
     gender: "남자",
-    nickname: "Bam",
+
     birthDay: "941234",
     email: "rlaugs15@google.com",
   },
 ];
 
-const setToken: { token: string } = {
-  token: "123456",
-};
-
 export const handlers = [
   // GET 요청
-  http.get("/api/users", () => {
+  http.get("/api/v1/member/me", () => {
     return HttpResponse.json(users, {
       status: 200,
       headers: {
@@ -40,24 +37,48 @@ export const handlers = [
     });
   }),
 
-  http.get("/api/users/token", () => {
-    return HttpResponse.json(setToken, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  // 이메일 인증 GET 요청
+  http.get("/api/v1/member/send-authCode", () => {
+    return HttpResponse.json(
+      { email: "rlaugs15@naver.com" },
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  }),
+
+  // 인증코드 확인용 GET 요청
+  http.get("/api/v1/member/verify-authCode", () => {
+    return HttpResponse.json(
+      { authCode: "12345" },
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
   }),
 
   // POST 요청
   // 이메일 인증 코드 전송
   http.post("/api/v1/member/send-authCode", async ({ request }) => {
-    const { email, password, nickname } = await request.json();
+    const { email } = await request.json();
+    if (email)
+      return HttpResponse.json(
+        { code: 200, message: "12345" },
+        { status: 200 }
+      );
   }),
 
   //이메일 인증 코드 인증
   http.post("/api/v1/member/verify-authCode", async ({ request }) => {
-    const { email, password, nickname } = await request.json();
+    const { email, authCode } = await request.json();
+    if (email && authCode)
+      return HttpResponse.json({ code: 200 }, { status: 200 });
   }),
   http.post("/api/v1/member/login", async ({ request }) => {
     const { email, password, nickname } = await request.json();
@@ -70,40 +91,55 @@ export const handlers = [
       );
       if (!user) {
         // 사용자가 없으면 400 응답
-        return HttpResponse.json({
-          code: 400,
-          message: "사용자가 존재하지 않습니다",
-          data: null,
-        });
+        return HttpResponse.json(
+          {
+            code: 400,
+            message: "사용자가 존재하지 않습니다",
+            data: null,
+          },
+          { status: 400 }
+        );
       }
-      return HttpResponse.json({ code: 200, message: "성공", data: user });
+      return HttpResponse.json(
+        { code: 200, message: "성공", data: user },
+        { status: 200 }
+      );
       //이메일만 받는 경우(이메일 인증)
     } else if (email) {
       user = users.find((user) => user.email === email);
       if (user) {
         // 사용자가 있으면 400 응답
-        return HttpResponse.json({
-          code: 400,
-          message: "이메일 인증 실패",
-        });
+        return HttpResponse.json(
+          {
+            code: 400,
+            message: "이메일 인증 실패",
+          },
+          { status: 400 }
+        );
       }
-      return HttpResponse.json({ code: 200 });
+      return HttpResponse.json({ code: 200 }, { status: 200 });
       //닉네임 중복 확인
     } else if (nickname) {
       const serchNickname = users.find((user) => user.nickname === nickname);
       if (serchNickname) {
-        return HttpResponse.json({
-          code: 403,
-          message: "중복된 닉네임 입니다.",
-          data: null,
-        });
+        return HttpResponse.json(
+          {
+            code: 403,
+            message: "중복된 닉네임 입니다.",
+            data: null,
+          },
+          { status: 403 }
+        );
       }
       if (!serchNickname) {
-        return HttpResponse.json({
-          code: 200,
-          message: "닉네임 인증 성공",
-          data: null,
-        });
+        return HttpResponse.json(
+          {
+            code: 200,
+            message: "닉네임 인증 성공",
+            data: null,
+          },
+          { status: 200 }
+        );
       }
     }
   }),
@@ -119,22 +155,30 @@ export const handlers = [
     return HttpResponse.json(users, { status: 201 });
   }), */
 
-  //토큰 인증
-  http.post("/api/users/token", async ({ request }) => {
-    const { token } = await request.json();
-    if (setToken.token !== token) {
-      return HttpResponse.json({
-        code: 401,
-        message: "잘못된 토큰입니다.",
-      });
-    }
-    return HttpResponse.json({ code: 200, message: "성공" });
-  }),
-
   //회원가입 승인
   http.post("/api/users/join", async ({ request }) => {
-    const { email, name, password } = await request.json();
-    users.push({ id: Date.now() + "", email, name, password });
+    const {
+      loginId,
+      password,
+      passwordConfirm,
+      firstName,
+      lastName,
+      gender,
+      nickname,
+      birthDay,
+      email,
+    } = await request.json();
+    users.push({
+      loginId,
+      password,
+      passwordConfirm,
+      firstName,
+      lastName,
+      gender,
+      nickname,
+      birthDay,
+      email,
+    });
     return HttpResponse.json({ code: 200 });
   }),
 ];
