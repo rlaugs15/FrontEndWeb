@@ -3,31 +3,8 @@ import { btnBase } from "../utils/utils";
 import { useNavigate } from "react-router-dom";
 import useMutation from "../hooks/useMutation";
 import { useEffect, useState } from "react";
-
-/* interface User {
-  loginId: string;
-  password: string;
-  passwordConfirm?: string;
-  firstName: string;
-  lastName?: string;
-  gender: string;
-  nickname: string;
-  birthDay: string;
-  email?: string;
-}
-
-const users: User[] = [
-  {
-    loginId: "rlaugs15@naver.com",
-    password: "rlaguswns123!!",
-    firstName: "현준",
-    lastName: "김",
-    gender: "남자",
-    nickname: "Bam",
-    birthDay: "941234",
-    email: "rlaugs15@google.com",
-  },
-]; */
+import NotFound from "./NotFound";
+import useSWR from "swr";
 
 interface IJoinForm {
   loginId: string;
@@ -45,7 +22,6 @@ interface IJoinForm {
 export interface MutationResult {
   code?: number; //일단 수정대기, 쓰이지 않으면 삭제할 것
   message?: string;
-  dadt?: string | null;
 }
 
 function Join() {
@@ -54,6 +30,7 @@ function Join() {
     handleSubmit,
     getValues,
     setValue,
+    setFocus,
     clearErrors,
     setError,
     formState: { errors },
@@ -64,43 +41,78 @@ function Join() {
     nav("/");
   };
 
-  const [emailCheck, { data: emailCheckData, loading: emailCheckLoading }] =
-    useMutation<MutationResult>("/api/v1/member/send-authCode");
+  const [emailAuthOpen, setEmailAuthOpen] = useState(false);
+
+  const [emailCheck, setEmailCheck] = useState("");
+  const { data: emailCheckData, isValidating: emailCheckLoading } =
+    useSWR<MutationResult>(
+      emailCheck ? `/api/v1/auth/check-email/${emailCheck}` : null
+    );
+
   const [cofirmEmail, setCofirmEmail] = useState(false);
+  const [emailAuth, { data: emailAuthData, loading: emailAuthLoading }] =
+    useMutation<MutationResult>("/api/v1/auth/send-code");
 
   const [authCodeCheck, { data: authCodeData, loading: authCodeLoading }] =
-    useMutation<MutationResult>("/api/v1/member/verify-authCode");
+    useMutation<MutationResult>("/api/v1/auth/verify-code");
   const [cofirmAuthCode, setCofirmAuthCode] = useState(false);
 
-  const [
-    nicknameCheck,
-    { data: nicknameCheckData, loading: nicknameCheckLoading },
-  ] = useMutation<MutationResult>("/api/v1/member/me");
+  const [nicknameCheck, setNicknameCheck] = useState("");
   const [cofirmNickname, setCofirmNickname] = useState(false);
+  const { data: nicknameCheckData, isValidating: nicknameCheckLoading } =
+    useSWR<MutationResult>(
+      nicknameCheck ? `/api/v1/auth/check-nickname/${nicknameCheck}` : null
+    );
 
-  //email버튼을 클릭하고 사용가능 이메일 여부 체크
-  //가입된 이메일 존재하는지 체크? 서버에서 체크하는게 좋을듯
-  const onEmailConfirm = async () => {
+  //이메일 중복체크
+  const onEmailCheck = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    const email = getValues("loginId");
     if (emailCheckLoading) return;
-    const email = getValues("email");
-    await emailCheck({ email });
-    setCofirmAuthCode(false);
+    setEmailCheck(email + "");
   };
   useEffect(() => {
     if (emailCheckData?.code !== 200) {
-      setError("email", { message: emailCheckData?.message });
-      setValue("authCode", "");
-      setCofirmAuthCode(false);
-      setCofirmEmail(false);
-    } else if (emailCheckData?.code === 200) {
-      setCofirmEmail(true);
-      clearErrors("email");
+      setError("loginId", { message: emailCheckData?.message });
     }
+    if (emailCheckData?.code === 200) {
+      setEmailAuthOpen(true);
+    }
+    setFocus("loginId");
   }, [emailCheckData, setError]);
 
-  //인증코드 체크
-  const onauthCodeCheck = async () => {
-    const email = getValues("email");
+  //이메일 중복체크, 인증
+  const onEmailConfirm = async (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    const email = getValues("loginId");
+    if (emailAuthLoading) return;
+    setCofirmAuthCode(false);
+    await emailAuth({ email });
+  };
+
+  useEffect(() => {
+    if (emailAuthData?.code !== 200) {
+      setError("loginId", { message: emailAuthData?.message });
+      setValue("authCode", "");
+      setCofirmAuthCode(false);
+      setFocus("loginId");
+    } else if (emailAuthData?.code === 200) {
+      clearErrors("loginId");
+      setFocus("authCode");
+    }
+  }, [
+    emailAuthData,
+    setError,
+    setFocus,
+    setValue,
+    setCofirmAuthCode,
+    setCofirmEmail,
+  ]);
+
+  //인증번호 체크
+  const onauthCodeCheck = async (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    const email = getValues("loginId");
     const authCode = getValues("authCode");
     if (authCodeLoading) return;
     await authCodeCheck({ email, authCode });
@@ -117,37 +129,36 @@ function Join() {
   }, [authCodeData, setError]);
 
   //닉네임 중복 확인
-  //중복체크 api가 없음
-  const onNicknameConfirm = async () => {
+  const onNicknameConfirm = async (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
     const nickname = getValues("nickname");
-    if (nickname.length > 5) {
+    if (nickname.length > 51) {
       setCofirmNickname(false);
-      setError("nickname", { message: "최대 5자까지 입력 가능합니다." });
+      setError("nickname", { message: "최대 50자까지 입력 가능합니다." });
       return;
     }
     if (nicknameCheckLoading) return;
-    await nicknameCheck({ nickname });
+    setNicknameCheck(nickname);
   };
   useEffect(() => {
-    if (nicknameCheckData?.code !== 200) {
+    if (nicknameCheckData?.code === 403) {
       setCofirmNickname(false);
-      setError("nickname", { message: nicknameCheckData?.message });
-    } else if (nicknameCheckData?.code === 200) {
+      setFocus("nickname");
+      setError("nickname", { message: "중복된 닉네임입니다." });
+    }
+    if (nicknameCheckData?.code === 200) {
       setCofirmNickname(true);
       clearErrors("nickname");
+      setFocus("firstName");
     }
-  }, [nicknameCheckData, setError]);
+  }, [nicknameCheckData, setError, setFocus]);
 
   //회원가입 승인
   const buttonReady = cofirmNickname && !cofirmEmail && cofirmAuthCode;
   const [join, { data: joinData, loading: joinLoading }] =
-    useMutation<MutationResult>("/api/v1/member/join");
-  const onJoinSubmit = ({
-    email,
-    nickname,
-    password,
-    passwordConfirm,
-  }: IJoinForm) => {
+    useMutation<MutationResult>("/api/v1/join");
+  const onJoinSubmit = (data: IJoinForm) => {
+    const { password, passwordConfirm } = data;
     if (!buttonReady) return;
     if (password !== passwordConfirm) {
       setError("passwordConfirm", { message: "비밀번호가 일치하지 않습니다." });
@@ -155,14 +166,15 @@ function Join() {
     }
     if (joinLoading) return;
 
-    join({ email, nickname, password, passwordConfirm });
+    join(data);
   };
   useEffect(() => {
-    if (joinData?.code === 401) {
-      //401페이지로 이동
-    } else if (joinData?.code === 200) {
-      nav("/");
-    }
+    if (joinData?.code !== 200) {
+      <NotFound
+        code={Number(joinData?.code)}
+        message={String(joinData?.message)}
+      />;
+    } else if (joinData?.code === 200) nav("/");
   }, [joinData, nav]);
   return (
     <div>
@@ -176,33 +188,39 @@ function Join() {
           홈
         </button>
       </header>
-      <main className="flex items-center justify-center h-screen ">
+      <main className="relative flex items-center justify-center h-screen top-32">
         <form
           onSubmit={handleSubmit(onJoinSubmit)}
           className="flex flex-col bg-purple-100 w-[800px] p-3"
         >
           <label className="font-semibold" htmlFor="email">
-            이메일:{" "}
-            {errors.email && (
-              <span className="text-red-500">{errors.email.message}</span>
+            이메일(필수):{" "}
+            {errors.loginId && (
+              <span className="text-red-500">{errors.loginId.message}</span>
             )}
           </label>
           <div className="mb-16 space-x-2">
             <input
-              {...register("email", { required: true })}
+              {...register("email", { required: true, maxLength: 255 })}
               className="w-5/6 h-9"
               id="email"
               type="email"
               required
               placeholder="이메일을 입력해주세요."
             />
-            <button onClick={onEmailConfirm} className={`${btnBase}`}>
-              이메일 확인
-            </button>
+            {!emailAuthOpen ? (
+              <button onClick={onEmailCheck} className={`${btnBase}`}>
+                중복 확인
+              </button>
+            ) : (
+              <button onClick={onEmailConfirm} className={`${btnBase}`}>
+                이메일 확인
+              </button>
+            )}
           </div>
-          {cofirmEmail ? (
+          {emailAuthData?.code === 200 && cofirmEmail ? (
             <>
-              <label className="font-semibold" htmlFor="token">
+              <label className="font-semibold" htmlFor="authCode">
                 인증코드:{" "}
                 {errors.authCode && (
                   <span className="text-red-500">
@@ -214,10 +232,10 @@ function Join() {
                 <input
                   {...register("authCode", { required: true })}
                   className="w-3/6 h-9"
-                  id="token"
+                  id="authCode"
                   type="password"
                   required
-                  placeholder="토큰을 입력해주세요."
+                  placeholder="인증코드를 입력해주세요."
                 />
                 <button
                   onClick={onauthCodeCheck}
@@ -234,7 +252,7 @@ function Join() {
             </span>
           ) : null}
           <label className="font-semibold" htmlFor="nickname">
-            닉네임:{" "}
+            닉네임(필수):{" "}
             {errors.nickname && (
               <span className="text-red-500">{errors.nickname.message}</span>
             )}
@@ -245,22 +263,22 @@ function Join() {
               {...register("nickname", {
                 required: "닉네임은 필수 항목입니다.",
                 maxLength: {
-                  value: 5,
-                  message: "닉네임은 최대 5자까지 입력 가능합니다.",
+                  value: 50,
+                  message: "닉네임은 최대 50자까지 입력 가능합니다.",
                 },
               })}
               className="w-3/6 h-9"
               id="nickname"
               type="text"
               required
-              placeholder="닉네임을 5자 이하로 입력해주세요."
+              placeholder="닉네임을 50자 이하로 입력해주세요."
             />
             <button onMouseDown={onNicknameConfirm} className={`${btnBase}`}>
               닉네임 중복 확인
             </button>
           </div>
           <label className="font-semibold" htmlFor="first">
-            이름:{" "}
+            이름(필수):{" "}
             {errors.firstName && (
               <span className="text-red-500">{errors.firstName.message}</span>
             )}
@@ -284,21 +302,51 @@ function Join() {
             className="mb-16 h-9"
             id="last"
             required
-            placeholder="이름을 입력해주세요."
+            placeholder="성을 입력해주세요."
           />
-          <fieldset>
-            <legend>성별</legend>
+          <label className="font-semibold" htmlFor="birthDay">
+            생년월일(필수):
+          </label>
+          <input
+            {...register("birthDay", {
+              required: true,
+            })}
+            className="mb-16 h-9"
+            id="birthDay"
+            required
+            placeholder="ex)19970107"
+          />
+          <fieldset className="p-2">
+            <legend className="font-semibold">
+              성별(필수):{" "}
+              {errors.gender && (
+                <p className="text-red-500">{errors.gender.message}</p>
+              )}
+            </legend>
+            <div className="flex justify-between space-x-2 form_radio_btn">
+              <section className="w-full">
+                <input
+                  type="radio"
+                  id="male"
+                  {...register("gender", { required: "성별을 선택해주세요" })}
+                  value="email"
+                />
+                <label htmlFor="male">남자</label>
+              </section>
 
-            <input type="radio" id="male" />
-            <label htmlFor="male">남성</label>
-            <br />
-
-            <input type="radio" id="female" />
-            <label htmlFor="female">여성</label>
-            <br />
+              <section className="w-full">
+                <input
+                  type="radio"
+                  id="female"
+                  {...register("gender", { required: "성별을 선택해주세요" })}
+                  value="phone"
+                />
+                <label htmlFor="female">여자</label>
+              </section>
+            </div>
           </fieldset>
           <label className="font-semibold" htmlFor="pass">
-            비밀번호:{" "}
+            비밀번호(필수):{" "}
             {errors.password && (
               <span className="text-red-500">{errors.password.message}</span>
             )}
@@ -320,7 +368,7 @@ function Join() {
           />
 
           <label className="font-semibold" htmlFor="pass2">
-            비밀번호 확인:{" "}
+            비밀번호 확인(필수):{" "}
             {errors?.passwordConfirm && (
               <span className="w-full mb-3 text-center text-red-500">
                 {errors.passwordConfirm.message}

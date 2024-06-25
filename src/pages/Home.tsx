@@ -1,13 +1,19 @@
-import useSWR from "swr";
 import Nav from "../components/Nav";
+import useUser from "../hooks/useUser";
 
 function Home() {
-  const { data } = useSWR("/api/users");
+  const { user } = useUser();
+  console.log(user);
+
   return (
     <div>
       <Nav />
       <main className="h-[300vh]">
-        <h1>Alle에 오신 것을 환영합니다!</h1>
+        {user ? (
+          <h1>환영합니다 {user?.nickname}!</h1>
+        ) : (
+          <h1>Alle에 오신 것을 환영합니다!</h1>
+        )}
       </main>
     </div>
   );
