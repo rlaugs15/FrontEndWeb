@@ -5,6 +5,7 @@ import { RouterProvider } from "react-router-dom";
 import { router } from "./Router.tsx";
 import { RecoilRoot } from "recoil";
 import { SWRConfig } from "swr";
+import tokenInstance from "./tokenInstance.ts";
 
 async function enableMocking() {
   if (!import.meta.env.DEV) {
@@ -22,7 +23,7 @@ enableMocking().then(() => {
         <SWRConfig
           value={{
             fetcher: (url: string) =>
-              fetch(url).then((response) => response.json()),
+              tokenInstance.get(url).then((res) => res.data),
           }}
         >
           <RouterProvider router={router} />

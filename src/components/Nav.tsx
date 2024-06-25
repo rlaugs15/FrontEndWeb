@@ -1,7 +1,17 @@
-import { useMatch, useNavigate } from "react-router-dom";
+import { Link, useMatch, useNavigate } from "react-router-dom";
 import { btnBase, cls } from "../utils/utils";
+import useUser from "../hooks/useUser";
+import useMutation from "../hooks/useMutation";
+import { useSetRecoilState } from "recoil";
+import { settingStateAtom } from "../atoms";
+import { MutationResult } from "../pages/Join";
 
 function Nav() {
+  const { user } = useUser();
+  console.log("user", user);
+
+  const [logoutMutaion] = useMutation<MutationResult>("/api/v1/auth/logout");
+  const setSetting = useSetRecoilState(settingStateAtom);
   const nav = useNavigate();
   const onLoginClick = () => {
     nav("login");
@@ -9,11 +19,17 @@ function Nav() {
   const onJoinClick = () => {
     nav("join");
   };
+  const onLogoutClick = async () => {
+    await logoutMutaion({});
+  };
+  const onOpenSettingClick = () => {
+    setSetting((prev) => !prev);
+  };
   const match = useMatch("/");
   return (
     <nav className="flex items-center bg-purple-300">
       <section className="flex space-x-2">
-        <button>
+        <button onClick={onOpenSettingClick}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -52,7 +68,12 @@ function Nav() {
         </button>
       </section>
       <section className="grid w-full grid-cols-3 px-6 py-2">
-        <h2 className="text-3xl font-semibold focus-in-expand">Alle</h2>
+        <Link to={"/"}>
+          <button className="text-3xl font-semibold focus-in-expand">
+            Alle
+          </button>
+        </Link>
+
         <section
           className={cls(
             "flex justify-center space-x-3",
@@ -76,12 +97,22 @@ function Nav() {
           </button>
         </section>
         <div className="flex justify-end space-x-3 ">
-          <button onClick={onLoginClick} className={btnBase}>
-            로그인
-          </button>
-          <button onClick={onJoinClick} className={btnBase}>
-            회원가입
-          </button>
+          {user ? (
+            <>
+              <button onClick={onLogoutClick} className={btnBase}>
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={onLoginClick} className={btnBase}>
+                로그인
+              </button>
+              <button onClick={onJoinClick} className={btnBase}>
+                회원가입
+              </button>
+            </>
+          )}
         </div>
       </section>
     </nav>
