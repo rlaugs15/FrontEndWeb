@@ -5,23 +5,31 @@ import useMutation from "../hooks/useMutation";
 import { useSetRecoilState } from "recoil";
 import { settingStateAtom } from "../atoms";
 import { MutationResult } from "../pages/Join";
+import { mutate } from "swr";
+import { logout } from "../tokenInstance";
 
 function Nav() {
   const { user } = useUser();
-  console.log("user", user);
+  console.log(user);
 
-  const [logoutMutaion] = useMutation<MutationResult>("/api/v1/auth/logout");
+  const [logoutMutaion] = useMutation<MutationResult>("/auth/logout");
+
   const setSetting = useSetRecoilState(settingStateAtom);
   const nav = useNavigate();
   const onLoginClick = () => {
-    nav("login");
+    nav("/login");
   };
   const onJoinClick = () => {
-    nav("join");
+    nav("/join");
   };
   const onLogoutClick = async () => {
     await logoutMutaion({});
+    await logout();
+    mutate("/member", null, { revalidate: false });
+
+    nav("/");
   };
+
   const onOpenSettingClick = () => {
     setSetting((prev) => !prev);
   };
@@ -76,16 +84,19 @@ function Nav() {
 
         <section
           className={cls(
-            "flex justify-center space-x-3",
+            "flex justify-center items-center space-x-3",
             match ? "scale-in-center" : ""
           )}
         >
-          <button className="transition duration-300 hover:scale-150">
+          <Link to={"/"} className="transition duration-300 hover:scale-150">
             홈
-          </button>
-          <button className="transition duration-300 hover:scale-150">
-            목록1
-          </button>
+          </Link>
+          <Link
+            to={"/board"}
+            className="transition duration-300 hover:scale-150"
+          >
+            게시판
+          </Link>
           <button className="transition duration-300 hover:scale-150">
             목록2
           </button>
@@ -97,7 +108,7 @@ function Nav() {
           </button>
         </section>
         <div className="flex justify-end space-x-3 ">
-          {user ? (
+          {user?.id ? (
             <>
               <button onClick={onLogoutClick} className={btnBase}>
                 로그아웃
