@@ -28,13 +28,12 @@ export default function useUser() {
       return;
     }
 
-    if (data?.code !== 200 && pathname !== "/") {
+    if (data?.code !== 200 && pathname !== "/" && pathname !== "/login") {
       nav("/login", { replace: true });
     }
     if (data?.code === 200 && pathname === "/login") {
       nav("/", { replace: true });
     }
-    console.log("useUser 데이터", data);
   }, [data, error, nav, pathname]);
 
   return { user: data?.data, isLoading: !data && !error };

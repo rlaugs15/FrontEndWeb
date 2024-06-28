@@ -21,7 +21,6 @@ function EditProfile() {
   });
 
   const onEditSubmit = (data: IForm) => {
-    console.log(data);
     if (loading) return;
     edit(data);
   };

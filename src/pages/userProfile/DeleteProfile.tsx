@@ -6,6 +6,7 @@ import { btnBase } from "../../utils/utils";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../tokenInstance";
+import { mutate } from "swr";
 
 interface IForm {
   password: string;
@@ -48,11 +49,10 @@ function DeleteProfile() {
       setError("password", { message: "탈퇴에 실패했습니다." });
     }
     if (data?.code === 200) {
-      console.log(data);
-
       setClearMessage(true);
       setTimeout(() => {
         logout();
+        mutate("/member", null, { revalidate: false });
         nav("/");
       }, 2000);
     }

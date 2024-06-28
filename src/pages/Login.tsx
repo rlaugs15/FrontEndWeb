@@ -39,7 +39,6 @@ function Login() {
     if (loginData?.code !== 200) {
       setError("loginId", { message: loginData?.message });
     } else if (loginData?.code === 200 && loginData?.data?.token) {
-      console.log("loginData", loginData);
       localStorage.setItem("accessToken", loginData?.data?.token);
       nav("/");
     }

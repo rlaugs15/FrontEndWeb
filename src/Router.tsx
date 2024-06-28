@@ -9,6 +9,10 @@ import SearchPass from "./pages/SearchPass";
 import UserProfile from "./pages/userProfile/UserProfile";
 import EditProfile from "./pages/userProfile/EditProfile";
 import DeleteProfile from "./pages/userProfile/DeleteProfile";
+import BoardList from "./pages/board/BoardList";
+import BoardDetail from "./pages/board/BoardDetail";
+import Board from "./pages/board/Board";
+import BoardModify from "./pages/board/BoardModify.";
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +52,16 @@ export const router = createBrowserRouter([
           {
             path: "deleteProfile",
             element: <DeleteProfile />,
+          },
+        ],
+      },
+      {
+        path: "board",
+        element: <Board />,
+        children: [
+          {
+            path: "",
+            element: <BoardList />,
           },
         ],
       },

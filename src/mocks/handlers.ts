@@ -1,6 +1,7 @@
 import { http, HttpResponse } from "msw";
 import { SignJWT, jwtVerify } from "jose";
 import { logout } from "../tokenInstance";
+import { posts } from "./data";
 
 const secretKey = new TextEncoder().encode("your-secret-key");
 
@@ -16,6 +17,7 @@ export interface User {
   email?: string;
 }
 
+//유저 데이터
 const users: User[] = [
   {
     loginId: "rlaugs15@naver.com",
@@ -139,9 +141,10 @@ export const handlers = [
   // 이메일 중복확인 GET 요청
   http.get("/api/v1/auth/check-email/:email", ({ params }) => {
     const { email } = params;
-    const user = users.find((user) => user.email === email);
-
-    if (user) {
+    //const { email } = params;
+    const user = users.find((user) => user.loginId === email);
+    return HttpResponse.json({ code: 200, message: "email" }, { status: 200 });
+    /* if (user) {
       return HttpResponse.json(
         { code: 403, message: "이메일이 이미 사용 중입니다." },
         { status: 403 }
@@ -151,7 +154,7 @@ export const handlers = [
     return HttpResponse.json(
       { code: 200, message: "사용 가능한 이메일입니다." },
       { status: 200 }
-    );
+    ); */
   }),
 
   // 이메일 인증 GET 요청
@@ -178,6 +181,32 @@ export const handlers = [
 
     return HttpResponse.json(
       { code: 200, message: "사용 가능한 닉네임입니다." },
+      { status: 200 }
+    );
+  }),
+
+  // 게시글 목록 조회
+  http.get("/api/v1/board", ({ request }) => {
+    const url = new URL(request.url);
+
+    const page = parseInt(url.searchParams.get("page") || "0");
+    const size = parseInt(url.searchParams.get("size") || "10");
+    const start = page * size;
+    const end = start + size;
+
+    const paginatedPosts = posts.slice(start, end);
+
+    return HttpResponse.json(
+      {
+        code: 200,
+        message: "데이터 조회 성공",
+        data: {
+          posts: paginatedPosts,
+          totalElements: posts.length,
+          totalPages: Math.ceil(posts.length / size),
+          currentPage: page,
+        },
+      },
       { status: 200 }
     );
   }),
