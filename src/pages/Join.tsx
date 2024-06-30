@@ -3,7 +3,6 @@ import { btnBase } from "../utils/utils";
 import { useNavigate } from "react-router-dom";
 import useMutation from "../hooks/useMutation";
 import { useEffect, useState } from "react";
-import NotFound from "./NotFound";
 import useSWR from "swr";
 
 interface IJoinForm {
@@ -69,7 +68,7 @@ function Join() {
     event.stopPropagation();
     const email = getValues("loginId");
     if (emailCheckLoading) return;
-    setEmailCheck(email + "");
+    setEmailCheck(email);
   };
   useEffect(() => {
     if (emailCheckData?.code !== 200) {
@@ -170,10 +169,10 @@ function Join() {
   };
   useEffect(() => {
     if (joinData?.code !== 200) {
-      <NotFound
-        code={Number(joinData?.code)}
-        message={String(joinData?.message)}
-      />;
+      nav("/errorPage", {
+        replace: true,
+        state: { code: joinData?.code, message: joinData?.message },
+      });
     } else if (joinData?.code === 200) nav("/");
   }, [joinData, nav]);
   return (
@@ -193,7 +192,7 @@ function Join() {
           onSubmit={handleSubmit(onJoinSubmit)}
           className="flex flex-col bg-purple-100 w-[800px] p-3"
         >
-          <label className="font-semibold" htmlFor="email">
+          <label className="font-semibold" htmlFor="loginId">
             이메일(필수):{" "}
             {errors.loginId && (
               <span className="text-red-500">{errors.loginId.message}</span>
@@ -201,9 +200,9 @@ function Join() {
           </label>
           <div className="mb-16 space-x-2">
             <input
-              {...register("email", { required: true, maxLength: 255 })}
+              {...register("loginId", { required: true, maxLength: 255 })}
               className="w-5/6 h-9"
-              id="email"
+              id="loginId"
               type="email"
               required
               placeholder="이메일을 입력해주세요."

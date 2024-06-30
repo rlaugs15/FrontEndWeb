@@ -13,6 +13,7 @@ import BoardList from "./pages/board/BoardList";
 import BoardDetail from "./pages/board/BoardDetail";
 import Board from "./pages/board/Board";
 import BoardModify from "./pages/board/BoardModify.";
+import ErrorPage from "./pages/ErrorPage";
 
 export const router = createBrowserRouter([
   {
@@ -63,7 +64,19 @@ export const router = createBrowserRouter([
             path: "",
             element: <BoardList />,
           },
+          {
+            path: "read/:boardId",
+            element: <BoardDetail />,
+          },
+          {
+            path: "modify/:boardId",
+            element: <BoardModify />,
+          },
         ],
+      },
+      {
+        path: "errorPage",
+        element: <ErrorPage />,
       },
     ],
     errorElement: <NotFound />,

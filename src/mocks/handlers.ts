@@ -211,6 +211,35 @@ export const handlers = [
     );
   }),
 
+  //게시글 조회
+  http.get("/api/v1/board/:id", ({ params }) => {
+    const { id } = params;
+    const post = posts.find((post) => Number(id) === post?.id);
+    return HttpResponse.json(
+      {
+        code: 200,
+        message: "데이터 조회 성공",
+        data: post,
+      },
+      { status: 200 }
+    );
+  }),
+
+  //좋아요 조회
+  http.get("/api/v1/board/like/:id", ({ params }) => {
+    const { id } = params;
+    const post = posts.find((post) => Number(id) === post?.id);
+    return HttpResponse.json(
+      {
+        code: 200,
+        message: "데이터 조회 성공",
+        data: {
+          like: post?.like,
+        },
+      },
+      { status: 200 }
+    );
+  }),
   // ----------------------POST 요청--------------------------------------
   // 이메일 인증 코드 전송
   http.post("/api/v1/auth/send-code", async ({ request }) => {
@@ -359,6 +388,26 @@ export const handlers = [
     // 비밀번호와 DELETE 요청이 오면 성공 응답 반환
     return HttpResponse.json(
       { code: 200, message: "User deleted successfully" },
+      { status: 200 }
+    );
+  }),
+
+  //게시글 삭제
+  http.delete("/api/v1/board/:id", async ({ params }) => {
+    const { id } = params;
+    // id로 게시글 찾기
+    const postIndex = posts.findIndex((post) => Number(id) === post?.id);
+    if (postIndex === -1) {
+      return HttpResponse.json(
+        { code: 404, message: "게시글 삭제에 실패했습니다.." },
+        { status: 404 }
+      );
+    }
+    posts.splice(postIndex, 1);
+
+    // 비밀번호와 DELETE 요청이 오면 성공 응답 반환
+    return HttpResponse.json(
+      { code: 200, message: "게시글 삭제에 성공했습니다." },
       { status: 200 }
     );
   }),

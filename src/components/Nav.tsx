@@ -10,7 +10,6 @@ import { logout } from "../tokenInstance";
 
 function Nav() {
   const { user } = useUser();
-  console.log(user);
 
   const [logoutMutaion] = useMutation<MutationResult>("/auth/logout");
 

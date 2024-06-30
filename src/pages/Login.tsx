@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import useMutation from "../hooks/useMutation";
 import { useEffect } from "react";
 import { MutationResult } from "./Join";
+import useUser from "../hooks/useUser";
 
 interface ILoginForm {
   loginId: string;
@@ -18,6 +19,7 @@ interface LoginResponse extends MutationResult {
 }
 
 function Login() {
+  const { user } = useUser();
   const nav = useNavigate();
   const onHomeClick = () => {
     nav("/");
@@ -43,6 +45,12 @@ function Login() {
       nav("/");
     }
   }, [loginData, nav, setError]);
+
+  useEffect(() => {
+    if (user && user?.id) {
+      nav("/");
+    }
+  }, [user, nav]);
   return (
     <div>
       <header className="grid grid-cols-3 py-3 bg-purple-300 px-7">

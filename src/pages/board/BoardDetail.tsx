@@ -1,0 +1,163 @@
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { btnBase } from "../../utils/utils";
+import CommentBox from "./comments/CommentBox ";
+import CommentInput from "./comments/CommentInput";
+import { useEffect, useState } from "react";
+import useSWR from "swr";
+import useUser from "../../hooks/useUser";
+import { MutationResult } from "../Join";
+import useMutation from "../../hooks/useMutation";
+
+export interface Post {
+  id: number;
+  title: string;
+  content: string;
+  author: string;
+  like?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PostResult extends MutationResult {
+  data: Post;
+}
+
+interface LikeResult extends MutationResult {
+  data: {
+    like: number;
+  };
+}
+
+function BoardDetail() {
+  const { boardId } = useParams();
+  const { user } = useUser();
+  const nav = useNavigate();
+  const [realDelete, setrealDelete] = useState(false);
+  const [good, setGood] = useState(false);
+  const [goodNum, setGoodNum] = useState(3);
+  const { data: likeData } = useSWR<LikeResult>(`/board/like/${boardId}`);
+  const { data: postData } = useSWR<PostResult>(`/board/${boardId}`);
+  const [deleteBoard, { data: deleteData }] = useMutation<MutationResult>(
+    `/api/v1/board/${boardId}`,
+    "DELETE"
+  );
+
+  const onDeleteClick = () => {
+    setrealDelete(true);
+  };
+  const onRealDeleteClick = () => {
+    deleteBoard({ id: boardId });
+  };
+  useEffect(() => {
+    if (deleteData && deleteData?.code === 200) {
+      nav("/board", { replace: true });
+    } else if (deleteData && deleteData?.code !== 200) {
+      nav("/errorPage", {
+        replace: true,
+        state: { code: deleteData?.code, message: deleteData?.message },
+      });
+    }
+  }, [deleteData, nav]);
+
+  const onGoodClick = () => {
+    setGood((prev) => !prev);
+  };
+
+  useEffect(() => {
+    if (good) setGoodNum((prev) => (prev += 1));
+    if (!good) setGoodNum((prev) => (prev -= 1));
+  }, [good]);
+
+  return (
+    <>
+      <div className="w-full bg-gray-100">
+        <section className="p-6 bg-white rounded-lg shadow-md">
+          <title className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold">{postData?.data?.title}</h1>
+            <span className="text-gray-600">#{postData?.data?.id}</span>
+          </title>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-gray-600">
+              <span className="mr-2">작성자: {postData?.data?.author}</span>
+              <span>작성일: {postData?.data?.createdAt}</span>
+            </div>
+            <div className="text-gray-500">
+              <span>수정일: {postData?.data?.updatedAt}</span>
+            </div>
+          </div>
+          <div className="mb-1">추천: {likeData?.data?.like}</div>
+          <div className="mb-4 space-x-3">
+            <button onClick={onGoodClick} className={`${btnBase} `}>
+              추천
+            </button>
+            {user?.nickname === postData?.data?.author ? (
+              <>
+                <Link
+                  to={`/board/modify/${boardId}`}
+                  state={{
+                    boardId,
+                    author: postData?.data?.author,
+                    title: postData?.data?.title,
+                    content: postData?.data?.content,
+                  }}
+                >
+                  <button className={`${btnBase} bg-green-500 ring-green-500`}>
+                    수정
+                  </button>
+                </Link>
+                <button
+                  onClick={onDeleteClick}
+                  className={`${btnBase} bg-red-500 ring-red-500`}
+                >
+                  삭제
+                </button>
+              </>
+            ) : null}
+          </div>
+          <div className="mb-6 leading-relaxed text-gray-800">
+            {postData?.data?.content}
+          </div>
+        </section>
+
+        <section className="p-4 mt-6 bg-white rounded-lg shadow-md">
+          <h2 className="mb-4 text-2xl font-semibold">댓글</h2>
+          <div className="mb-4 space-y-4">
+            <CommentBox
+              writer="홍길동"
+              createdAt="2024-06-26 13:20"
+              comment="아침을 먹었다."
+            />
+            <CommentBox
+              writer="원빈"
+              createdAt="2024-05-26 13:20"
+              comment="점심을 먹었다."
+            />
+          </div>
+          <section>
+            <CommentInput />
+          </section>
+        </section>
+      </div>
+      {realDelete ? (
+        <div className="absolute z-20 flex items-center justify-center w-full h-full bg-black bg-opacity-20">
+          <dialog open className="p-6 space-y-3 ">
+            <p>정말 게시글을 삭제하시겠습니다?</p>
+            <form method="dialog" className="grid grid-cols-2 gap-2">
+              <button onClick={onRealDeleteClick} className={`${btnBase}`}>
+                예
+              </button>
+              <button
+                onClick={() => setrealDelete(false)}
+                className={`${btnBase}`}
+              >
+                아니오
+              </button>
+            </form>
+          </dialog>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export default BoardDetail;
