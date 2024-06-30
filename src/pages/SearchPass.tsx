@@ -26,7 +26,6 @@ function SearchPass() {
   const onSerachEmailSubmit = async (data: ISearchPassForm) => {
     if (passLoading) return;
     await searchPass(data);
-    console.log("passData", passData);
   };
   useEffect(() => {
     if (passData?.code !== 200) {

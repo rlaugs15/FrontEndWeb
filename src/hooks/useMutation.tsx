@@ -7,7 +7,7 @@ interface UseMutationState<T> {
   statusCode?: number;
 }
 
-type Method = "POST" | "DELETE" | "PATCH";
+type Method = "POST" | "DELETE" | "PATCH" | "PUT";
 
 // useMutation의 리턴타입
 type UseMutationResult<T> = [(data: any) => void, UseMutationState<T>];

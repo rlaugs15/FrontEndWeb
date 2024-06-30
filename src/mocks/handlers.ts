@@ -240,6 +240,7 @@ export const handlers = [
       { status: 200 }
     );
   }),
+
   // ----------------------POST 요청--------------------------------------
   // 이메일 인증 코드 전송
   http.post("/api/v1/auth/send-code", async ({ request }) => {
@@ -408,6 +409,31 @@ export const handlers = [
     // 비밀번호와 DELETE 요청이 오면 성공 응답 반환
     return HttpResponse.json(
       { code: 200, message: "게시글 삭제에 성공했습니다." },
+      { status: 200 }
+    );
+  }),
+
+  // ----------------------PUT 요청--------------------------------------
+  http.put("/api/v1/board", async ({ request }) => {
+    const { id, title, content } = await request.json();
+
+    // id로 게시글 찾기
+    const postIndex = posts.findIndex((post) => Number(id) === post?.id);
+    if (postIndex === -1) {
+      return HttpResponse.json(
+        { code: 404, message: "게시글이 존재하지 않습니다.," },
+        { status: 404 }
+      );
+    }
+    const post = posts[postIndex];
+
+    // 새로운 게시글 객체 생성
+    const newPost = { ...post, title, content };
+
+    //기존 데이터 업데이트
+    posts[postIndex] = newPost;
+    return HttpResponse.json(
+      { code: 200, message: "데이터가 수정되었습니다,", data: newPost },
       { status: 200 }
     );
   }),
