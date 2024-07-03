@@ -241,6 +241,21 @@ export const handlers = [
     );
   }),
 
+  //댓글 조회
+  http.get("/api/v1/comments/:id", ({ params }) => {
+    const { id } = params;
+    const post = posts.find((post) => Number(id) === post?.id);
+    const commentList = post?.comments;
+    return HttpResponse.json(
+      {
+        code: 200,
+        message: "데이터 조회 성공",
+        data: commentList,
+      },
+      { status: 200 }
+    );
+  }),
+
   // ----------------------POST 요청--------------------------------------
   // 이메일 인증 코드 전송
   http.post("/api/v1/auth/send-code", async ({ request }) => {

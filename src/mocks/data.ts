@@ -8,6 +8,38 @@ export const posts = [
     like: 2,
     createdAt: "2024-03-21 18:13",
     updatedAt: "2024-03-21 18:13",
+    comments: [
+      {
+        id: 1,
+        parentCommentId: null,
+        childrenCommentsIds: [2, 3],
+        content: "첫 번째 게시글의 첫 번째 댓글",
+      },
+      {
+        id: 2,
+        parentCommentId: 1,
+        childrenCommentsIds: [],
+        content: "첫 번째 게시글의 두 번째 댓글",
+      },
+      {
+        id: 3,
+        parentCommentId: 1,
+        childrenCommentsIds: [4],
+        content: "첫 번째 게시글의 세 번째 댓글",
+      },
+      {
+        id: 4,
+        parentCommentId: 3,
+        childrenCommentsIds: [],
+        content: "첫 번째 게시글의 네 번째 댓글",
+      },
+      {
+        id: 5,
+        parentCommentId: null,
+        childrenCommentsIds: [],
+        content: "첫 번째 게시글의 다섯 번째 댓글",
+      },
+    ],
   },
   {
     id: 650856,
@@ -17,6 +49,38 @@ export const posts = [
     like: 2,
     createdAt: "2024-05-20 18:13",
     updatedAt: "2024-05-20 18:13",
+    comments: [
+      {
+        id: 6,
+        parentCommentId: null,
+        childrenCommentsIds: [],
+        content: "두 번째 게시글의 첫 번째 댓글",
+      },
+      {
+        id: 7,
+        parentCommentId: null,
+        childrenCommentsIds: [],
+        content: "두 번째 게시글의 두 번째 댓글",
+      },
+      {
+        id: 8,
+        parentCommentId: null,
+        childrenCommentsIds: [],
+        content: "두 번째 게시글의 세 번째 댓글",
+      },
+      {
+        id: 9,
+        parentCommentId: null,
+        childrenCommentsIds: [],
+        content: "두 번째 게시글의 네 번째 댓글",
+      },
+      {
+        id: 10,
+        parentCommentId: null,
+        childrenCommentsIds: [],
+        content: "두 번째 게시글의 다섯 번째 댓글",
+      },
+    ],
   },
   {
     id: 650855,
@@ -26,6 +90,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-15 18:13",
     updatedAt: "2024-06-15 18:13",
+    comments: [],
   },
   {
     id: 650854,
@@ -35,6 +100,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-20 10:00",
     updatedAt: "2024-06-20 10:00",
+    comments: [],
   },
   {
     id: 650853,
@@ -44,6 +110,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-21 11:00",
     updatedAt: "2024-06-21 11:00",
+    comments: [],
   },
   {
     id: 650852,
@@ -53,6 +120,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-22 12:00",
     updatedAt: "2024-06-22 12:00",
+    comments: [],
   },
   {
     id: 650851,
@@ -62,6 +130,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-23 13:00",
     updatedAt: "2024-06-23 13:00",
+    comments: [],
   },
   {
     id: 650850,
@@ -71,6 +140,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-24 14:00",
     updatedAt: "2024-06-24 14:00",
+    comments: [],
   },
   {
     id: 650849,
@@ -80,6 +150,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-25 15:00",
     updatedAt: "2024-06-25 15:00",
+    comments: [],
   },
   {
     id: 650848,
@@ -89,6 +160,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-26 16:00",
     updatedAt: "2024-06-26 16:00",
+    comments: [],
   },
   {
     id: 650847,
@@ -98,6 +170,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-27 17:00",
     updatedAt: "2024-06-27 17:00",
+    comments: [],
   },
   {
     id: 650846,
@@ -107,6 +180,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-28 18:00",
     updatedAt: "2024-06-28 18:00",
+    comments: [],
   },
   {
     id: 650845,
@@ -116,6 +190,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-29 19:00",
     updatedAt: "2024-06-29 19:00",
+    comments: [],
   },
   {
     id: 650844,
@@ -125,6 +200,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-06-30 20:00",
     updatedAt: "2024-06-30 20:00",
+    comments: [],
   },
   {
     id: 650843,
@@ -134,6 +210,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-01 21:00",
     updatedAt: "2024-07-01 21:00",
+    comments: [],
   },
   {
     id: 650842,
@@ -143,6 +220,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-02 22:00",
     updatedAt: "2024-07-02 22:00",
+    comments: [],
   },
   {
     id: 650832,
@@ -152,6 +230,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-03 23:00",
     updatedAt: "2024-07-03 23:00",
+    comments: [],
   },
   {
     id: 650840,
@@ -161,6 +240,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-04 00:00",
     updatedAt: "2024-07-04 00:00",
+    comments: [],
   },
   {
     id: 650839,
@@ -170,6 +250,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-05 01:00",
     updatedAt: "2024-07-05 01:00",
+    comments: [],
   },
   {
     id: 650838,
@@ -179,6 +260,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-06 02:00",
     updatedAt: "2024-07-06 02:00",
+    comments: [],
   },
   {
     id: 650837,
@@ -188,6 +270,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-07 03:00",
     updatedAt: "2024-07-07 03:00",
+    comments: [],
   },
   {
     id: 650836,
@@ -197,6 +280,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-08 04:00",
     updatedAt: "2024-07-08 04:00",
+    comments: [],
   },
   {
     id: 650835,
@@ -206,6 +290,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-09 05:00",
     updatedAt: "2024-07-09 05:00",
+    comments: [],
   },
   {
     id: 650834,
@@ -215,6 +300,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-10 06:00",
     updatedAt: "2024-07-10 06:00",
+    comments: [],
   },
   {
     id: 650833,
@@ -224,6 +310,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-07-11 07:00",
     updatedAt: "2024-07-11 07:00",
+    comments: [],
   },
   {
     id: 650832,
@@ -232,5 +319,6 @@ export const posts = [
     author: "원빈",
     like: 2,
     createdAt: "2024-07-12 08:00",
+    comments: [],
   },
 ];

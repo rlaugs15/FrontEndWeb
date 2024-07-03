@@ -25,6 +25,8 @@ function BoardList() {
   const { data: boardListData } = useSWR<BoardListResponse>(
     `/board?page=${page}&size=${size}`
   );
+  console.log(boardListData);
+
   const { register, handleSubmit, setValue } = useForm<IForm>({
     defaultValues: {
       page: page + 1,

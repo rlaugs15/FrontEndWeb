@@ -8,6 +8,19 @@ import useUser from "../../hooks/useUser";
 import { MutationResult } from "../Join";
 import useMutation from "../../hooks/useMutation";
 
+export interface NewComment {
+  id: number;
+  parentCommentId?: number | null;
+  childrenComments?: NewComment[];
+  content: string;
+}
+
+export interface Comment {
+  id: number;
+  parentCommentId?: number;
+  childrenCommentsIds?: number[];
+  content: string;
+}
 export interface Post {
   id: number;
   title: string;
@@ -16,6 +29,7 @@ export interface Post {
   like?: boolean;
   createdAt: string;
   updatedAt: string;
+  comments?: Comment[];
 }
 
 interface PostResult extends MutationResult {
@@ -26,6 +40,10 @@ interface LikeResult extends MutationResult {
   data: {
     like: number;
   };
+}
+
+interface CommentResult extends MutationResult {
+  data: Comment[];
 }
 
 function BoardDetail() {
@@ -41,6 +59,7 @@ function BoardDetail() {
     `/api/v1/board/${boardId}`,
     "DELETE"
   );
+  const { data: commentData } = useSWR<CommentResult>(`/comments/${boardId}`);
 
   const onDeleteClick = () => {
     setrealDelete(true);
@@ -67,6 +86,42 @@ function BoardDetail() {
     if (good) setGoodNum((prev) => (prev += 1));
     if (!good) setGoodNum((prev) => (prev -= 1));
   }, [good]);
+
+  console.log("commentData?.data", commentData?.data);
+
+  //댓글 리스트 수정
+  const commentList = (commentData: CommentResult): NewComment[] => {
+    const comments: Comment[] = commentData?.data || [];
+    let clonComments: Comment[] = [...comments];
+    let newComments: NewComment[] = [];
+    for (const comment of clonComments) {
+      if (!comment.parentCommentId) {
+        newComments.push({
+          id: comment.id,
+          content: comment.content,
+          parentCommentId: null,
+          childrenComments: [],
+        });
+      }
+    }
+
+    for (const newComment of newComments) {
+      let newChildrenComments: NewComment[] = [];
+      for (const comment of comments) {
+        if (comment.parentCommentId === newComment.id) {
+          newChildrenComments.push({
+            id: comment.id,
+            parentCommentId: newComment.id,
+            content: comment.content,
+            childrenComments: [],
+          });
+        }
+      }
+      newComment.childrenComments = newChildrenComments;
+    }
+
+    return newComments;
+  };
 
   return (
     <>
@@ -122,16 +177,16 @@ function BoardDetail() {
         <section className="p-4 mt-6 bg-white rounded-lg shadow-md">
           <h2 className="mb-4 text-2xl font-semibold">댓글</h2>
           <div className="mb-4 space-y-4">
-            <CommentBox
-              writer="홍길동"
-              createdAt="2024-06-26 13:20"
-              comment="아침을 먹었다."
-            />
-            <CommentBox
-              writer="원빈"
-              createdAt="2024-05-26 13:20"
-              comment="점심을 먹었다."
-            />
+            {commentData &&
+              commentList(commentData).map((comment) => (
+                <CommentBox
+                  key={comment?.id}
+                  id={comment?.id}
+                  parentCommentId={comment?.parentCommentId}
+                  childrenComments={comment?.childrenComments}
+                  content={comment?.content}
+                />
+              ))}
           </div>
           <section>
             <CommentInput />

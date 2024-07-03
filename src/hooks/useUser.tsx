@@ -16,7 +16,7 @@ interface IApiResponse extends MutationResult {
 }
 
 // 로그인된 사용자의 정보를 가져오고 로그인되지 않은 사용자를 로그인 페이지로 리다이렉트
-export default function useUser() {
+export default function useUser(userOnly: boolean = false) {
   const { data, error } = useSWR<IApiResponse>("/member");
 
   const nav = useNavigate();
@@ -28,13 +28,13 @@ export default function useUser() {
       return;
     }
 
-    if (data?.code !== 200 && pathname !== "/" && pathname !== "/login") {
+    if (userOnly && !data) {
       nav("/login", { replace: true });
     }
     if (data?.code === 200 && pathname === "/login") {
       nav("/", { replace: true });
     }
-  }, [data, error, nav, pathname]);
+  }, [data, error, nav, pathname, userOnly]);
 
   return { user: data?.data, isLoading: !data && !error };
 }
