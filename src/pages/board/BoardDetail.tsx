@@ -1,7 +1,7 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { btnBase } from "../../utils/utils";
 import CommentBox from "./comments/CommentBox ";
-import CommentInput from "./comments/CommentInput";
+import CreateComment from "./comments/CreateComment";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 import useUser from "../../hooks/useUser";
@@ -42,7 +42,7 @@ interface LikeResult extends MutationResult {
   };
 }
 
-interface CommentResult extends MutationResult {
+export interface CommentResult extends MutationResult {
   data: Comment[];
 }
 
@@ -86,8 +86,6 @@ function BoardDetail() {
     if (good) setGoodNum((prev) => (prev += 1));
     if (!good) setGoodNum((prev) => (prev -= 1));
   }, [good]);
-
-  console.log("commentData?.data", commentData?.data);
 
   //댓글 리스트 수정
   const commentList = (commentData: CommentResult): NewComment[] => {
@@ -189,7 +187,7 @@ function BoardDetail() {
               ))}
           </div>
           <section>
-            <CommentInput />
+            <CreateComment />
           </section>
         </section>
       </div>

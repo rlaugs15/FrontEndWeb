@@ -1,3 +1,67 @@
+//댓글 데이터
+export const commentListData = [
+  {
+    id: 1,
+    parentCommentId: null,
+    childrenCommentsIds: [2, 3],
+    content: "첫 번째 게시글의 첫 번째 댓글",
+  },
+  {
+    id: 2,
+    parentCommentId: 1,
+    childrenCommentsIds: [],
+    content: "첫 번째 게시글의 두 번째 댓글",
+  },
+  {
+    id: 3,
+    parentCommentId: 1,
+    childrenCommentsIds: [4],
+    content: "첫 번째 게시글의 세 번째 댓글",
+  },
+  {
+    id: 4,
+    parentCommentId: 3,
+    childrenCommentsIds: [],
+    content: "첫 번째 게시글의 네 번째 댓글",
+  },
+  {
+    id: 5,
+    parentCommentId: null,
+    childrenCommentsIds: [],
+    content: "첫 번째 게시글의 다섯 번째 댓글",
+  },
+  {
+    id: 6,
+    parentCommentId: null,
+    childrenCommentsIds: [],
+    content: "두 번째 게시글의 첫 번째 댓글",
+  },
+  {
+    id: 7,
+    parentCommentId: null,
+    childrenCommentsIds: [],
+    content: "두 번째 게시글의 두 번째 댓글",
+  },
+  {
+    id: 8,
+    parentCommentId: null,
+    childrenCommentsIds: [],
+    content: "두 번째 게시글의 세 번째 댓글",
+  },
+  {
+    id: 9,
+    parentCommentId: null,
+    childrenCommentsIds: [],
+    content: "두 번째 게시글의 네 번째 댓글",
+  },
+  {
+    id: 10,
+    parentCommentId: null,
+    childrenCommentsIds: [],
+    content: "두 번째 게시글의 다섯 번째 댓글",
+  },
+];
+
 // 게시글 데이터
 export const posts = [
   {
@@ -8,38 +72,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-03-21 18:13",
     updatedAt: "2024-03-21 18:13",
-    comments: [
-      {
-        id: 1,
-        parentCommentId: null,
-        childrenCommentsIds: [2, 3],
-        content: "첫 번째 게시글의 첫 번째 댓글",
-      },
-      {
-        id: 2,
-        parentCommentId: 1,
-        childrenCommentsIds: [],
-        content: "첫 번째 게시글의 두 번째 댓글",
-      },
-      {
-        id: 3,
-        parentCommentId: 1,
-        childrenCommentsIds: [4],
-        content: "첫 번째 게시글의 세 번째 댓글",
-      },
-      {
-        id: 4,
-        parentCommentId: 3,
-        childrenCommentsIds: [],
-        content: "첫 번째 게시글의 네 번째 댓글",
-      },
-      {
-        id: 5,
-        parentCommentId: null,
-        childrenCommentsIds: [],
-        content: "첫 번째 게시글의 다섯 번째 댓글",
-      },
-    ],
+    comments: [1, 2, 3, 4, 5],
   },
   {
     id: 650856,
@@ -49,38 +82,7 @@ export const posts = [
     like: 2,
     createdAt: "2024-05-20 18:13",
     updatedAt: "2024-05-20 18:13",
-    comments: [
-      {
-        id: 6,
-        parentCommentId: null,
-        childrenCommentsIds: [],
-        content: "두 번째 게시글의 첫 번째 댓글",
-      },
-      {
-        id: 7,
-        parentCommentId: null,
-        childrenCommentsIds: [],
-        content: "두 번째 게시글의 두 번째 댓글",
-      },
-      {
-        id: 8,
-        parentCommentId: null,
-        childrenCommentsIds: [],
-        content: "두 번째 게시글의 세 번째 댓글",
-      },
-      {
-        id: 9,
-        parentCommentId: null,
-        childrenCommentsIds: [],
-        content: "두 번째 게시글의 네 번째 댓글",
-      },
-      {
-        id: 10,
-        parentCommentId: null,
-        childrenCommentsIds: [],
-        content: "두 번째 게시글의 다섯 번째 댓글",
-      },
-    ],
+    comments: [6, 7, 8, 9, 10],
   },
   {
     id: 650855,

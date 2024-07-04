@@ -1,7 +1,8 @@
 import { http, HttpResponse } from "msw";
 import { SignJWT, jwtVerify } from "jose";
 import { logout } from "../tokenInstance";
-import { posts } from "./data";
+import { commentListData, posts } from "./data";
+import { Post } from "../pages/board/BoardDetail";
 
 const secretKey = new TextEncoder().encode("your-secret-key");
 
@@ -245,7 +246,15 @@ export const handlers = [
   http.get("/api/v1/comments/:id", ({ params }) => {
     const { id } = params;
     const post = posts.find((post) => Number(id) === post?.id);
-    const commentList = post?.comments;
+
+    let commentList = [];
+    for (const boardCommentId of post?.comments!) {
+      for (const comment of commentListData) {
+        if (boardCommentId === comment.id) {
+          commentList.push(comment);
+        }
+      }
+    }
     return HttpResponse.json(
       {
         code: 200,
@@ -395,6 +404,53 @@ export const handlers = [
     logout();
     return HttpResponse.json({ code: 200 }, { status: 200 });
   }),
+
+  //댓글 작성
+  http.post("/api/v1/board/comments/:boardId", async ({ request, params }) => {
+    const { boardId } = params;
+    const { content } = await request.json();
+    if (!boardId) {
+      return HttpResponse.json(
+        { code: 403, message: "게시글을 찾을 수 없습니다." },
+        { status: 403 }
+      );
+    }
+    if (!content) {
+      return HttpResponse.json(
+        { code: 403, message: "댓글 작성에 실패했습니다." },
+        { status: 403 }
+      );
+    }
+
+    const commId = Date.now();
+
+    commentListData.push({
+      id: commId,
+      parentCommentId: null,
+      childrenCommentsIds: [],
+      content,
+    });
+    const targetBoard = posts?.find((post) => post.id === +boardId);
+    const targetComments = targetBoard?.comments as number[];
+    targetComments.push(commId);
+
+    return HttpResponse.json(
+      { code: 200, message: "댓글 작성이 완료됐습니다.", data: {} },
+      { status: 200 }
+    );
+  }),
+
+  //대댓글 작성
+  /* http.post("/api/v1/board/comments/reply/:id", async ({ request }) => {
+    const { parentId } = await request.json();
+    if (!parentId) {
+      return HttpResponse.json({ code: 403, message: '댓글을 찾을 수 없습니다.' }, { status: 403 });
+    }
+
+    const parentComment = comments.find((id) => id === parentId);
+    parentComment?.childrenCommentsIds.push()
+    
+  }), */
 
   // ----------------------DELETE 요청--------------------------------------
   // 회원 정보 삭제 요청
