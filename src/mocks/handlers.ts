@@ -435,22 +435,50 @@ export const handlers = [
     targetComments.push(commId);
 
     return HttpResponse.json(
-      { code: 200, message: "댓글 작성이 완료됐습니다.", data: {} },
+      {
+        code: 200,
+        message: "댓글 작성이 완료됐습니다.",
+        data: {},
+      },
       { status: 200 }
     );
   }),
 
   //대댓글 작성
-  /* http.post("/api/v1/board/comments/reply/:id", async ({ request }) => {
-    const { parentId } = await request.json();
-    if (!parentId) {
-      return HttpResponse.json({ code: 403, message: '댓글을 찾을 수 없습니다.' }, { status: 403 });
-    }
+  http.post(
+    "/api/v1/board/comments/reply/:parentId",
+    async ({ request, params }) => {
+      const { parentId } = params;
+      const { content } = await request.json();
+      if (!parentId || !content) {
+        return HttpResponse.json(
+          { code: 403, message: "대댓글 작성에 실패했습니다." },
+          { status: 403 }
+        );
+      }
 
-    const parentComment = comments.find((id) => id === parentId);
-    parentComment?.childrenCommentsIds.push()
-    
-  }), */
+      const childId = Date.now();
+      commentListData.push({
+        id: childId,
+        parentCommentId: +parentId,
+        childrenCommentsIds: [],
+        content,
+      });
+
+      const targetParentIndex = commentListData.findIndex(
+        (comm) => comm.id === +parentId!
+      );
+      commentListData[targetParentIndex].childrenCommentsIds.push(childId);
+      return HttpResponse.json(
+        {
+          code: 200,
+          message: "대댓글 작성이 완료됐습니다.",
+          data: { commentListData },
+        },
+        { status: 200 }
+      );
+    }
+  ),
 
   // ----------------------DELETE 요청--------------------------------------
   // 회원 정보 삭제 요청

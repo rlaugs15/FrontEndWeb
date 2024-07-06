@@ -52,7 +52,6 @@ function BoardDetail() {
   const nav = useNavigate();
   const [realDelete, setrealDelete] = useState(false);
   const [good, setGood] = useState(false);
-  const [goodNum, setGoodNum] = useState(3);
   const { data: likeData } = useSWR<LikeResult>(`/board/like/${boardId}`);
   const { data: postData } = useSWR<PostResult>(`/board/${boardId}`);
   const [deleteBoard, { data: deleteData }] = useMutation<MutationResult>(
@@ -79,13 +78,8 @@ function BoardDetail() {
   }, [deleteData, nav]);
 
   const onGoodClick = () => {
-    setGood((prev) => !prev);
+    //좋아요 추후 구현
   };
-
-  useEffect(() => {
-    if (good) setGoodNum((prev) => (prev += 1));
-    if (!good) setGoodNum((prev) => (prev -= 1));
-  }, [good]);
 
   //댓글 리스트 수정
   const commentList = (commentData: CommentResult): NewComment[] => {
