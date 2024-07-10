@@ -2,7 +2,6 @@ import { http, HttpResponse } from "msw";
 import { SignJWT, jwtVerify } from "jose";
 import { logout } from "../tokenInstance";
 import { commentListData, posts } from "./data";
-import { Post } from "../pages/board/BoardDetail";
 
 const secretKey = new TextEncoder().encode("your-secret-key");
 
@@ -142,20 +141,17 @@ export const handlers = [
   // 이메일 중복확인 GET 요청
   http.get("/api/v1/auth/check-email/:email", ({ params }) => {
     const { email } = params;
-    //const { email } = params;
     const user = users.find((user) => user.loginId === email);
-    return HttpResponse.json({ code: 200, message: "email" }, { status: 200 });
-    /* if (user) {
+    if (user) {
       return HttpResponse.json(
-        { code: 403, message: "이메일이 이미 사용 중입니다." },
-        { status: 403 }
+        { code: 400, message: "이메일 인증에 실패했습니다" },
+        { status: 400 }
       );
     }
-
     return HttpResponse.json(
-      { code: 200, message: "사용 가능한 이메일입니다." },
+      { code: 200, message: "이메일 인증에 성공했습니다." },
       { status: 200 }
-    ); */
+    );
   }),
 
   // 이메일 인증 GET 요청
@@ -269,6 +265,12 @@ export const handlers = [
   // 이메일 인증 코드 전송
   http.post("/api/v1/auth/send-code", async ({ request }) => {
     const { email } = await request.json();
+    if (!email) {
+      return HttpResponse.json(
+        { code: 400, message: "잘못된 인증입니다." },
+        { status: 400 }
+      );
+    }
     if (email) {
       return HttpResponse.json(
         { code: 200, message: "12345" },
@@ -280,7 +282,12 @@ export const handlers = [
   // 이메일 인증 코드 인증
   http.post("/api/v1/auth/verify-code", async ({ request }) => {
     const { email, authCode } = await request.json();
-    if (email && authCode) {
+    const check = email && authCode;
+
+    if (!check) {
+      return HttpResponse.json({ code: 400 }, { status: 400 });
+    }
+    if (check) {
       return HttpResponse.json({ code: 200 }, { status: 200 });
     }
   }),

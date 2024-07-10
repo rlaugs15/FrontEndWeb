@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import useMutation from "../hooks/useMutation";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
+import useUser from "../hooks/useUser";
 
 interface IJoinForm {
   loginId: string;
@@ -19,7 +20,7 @@ interface IJoinForm {
 }
 
 export interface MutationResult {
-  code?: number; //일단 수정대기, 쓰이지 않으면 삭제할 것
+  code?: number;
   message?: string;
 }
 
@@ -36,6 +37,13 @@ function Join() {
   } = useForm<IJoinForm>();
 
   const nav = useNavigate();
+  const { user } = useUser();
+  useEffect(() => {
+    if (user) {
+      nav("/");
+    }
+  }, [user, nav]);
+
   const onHomeClick = () => {
     nav("/");
   };
@@ -43,14 +51,22 @@ function Join() {
   const [emailAuthOpen, setEmailAuthOpen] = useState(false);
 
   const [emailCheck, setEmailCheck] = useState("");
-  const { data: emailCheckData, isValidating: emailCheckLoading } =
-    useSWR<MutationResult>(
-      emailCheck ? `/api/v1/auth/check-email/${emailCheck}` : null
-    );
+  const {
+    data: emailCheckData,
+    isLoading: emailCheckLoading,
+    error: emailCheckError,
+  } = useSWR<MutationResult>(
+    emailCheck ? `/auth/check-email/${emailCheck}` : null,
+    {
+      dedupingInterval: 0,
+    }
+  );
 
   const [cofirmEmail, setCofirmEmail] = useState(false);
-  const [emailAuth, { data: emailAuthData, loading: emailAuthLoading }] =
-    useMutation<MutationResult>("/api/v1/auth/send-code");
+  const [
+    emailAuth,
+    { data: emailAuthData, loading: emailAuthLoading, error: emailAuthError },
+  ] = useMutation<MutationResult>("/api/v1/auth/send-code");
 
   const [authCodeCheck, { data: authCodeData, loading: authCodeLoading }] =
     useMutation<MutationResult>("/api/v1/auth/verify-code");
@@ -58,10 +74,16 @@ function Join() {
 
   const [nicknameCheck, setNicknameCheck] = useState("");
   const [cofirmNickname, setCofirmNickname] = useState(false);
-  const { data: nicknameCheckData, isValidating: nicknameCheckLoading } =
-    useSWR<MutationResult>(
-      nicknameCheck ? `/api/v1/auth/check-nickname/${nicknameCheck}` : null
-    );
+  const {
+    data: nicknameCheckData,
+    isValidating: nicknameCheckLoading,
+    error: nicknameError,
+  } = useSWR<MutationResult>(
+    nicknameCheck ? `/auth/check-nickname/${nicknameCheck}` : null,
+    {
+      dedupingInterval: 0,
+    }
+  );
 
   //이메일 중복체크
   const onEmailCheck = (event: { stopPropagation: () => void }) => {
@@ -71,16 +93,26 @@ function Join() {
     setEmailCheck(email);
   };
   useEffect(() => {
-    if (emailCheckData?.code !== 200) {
-      setError("loginId", { message: emailCheckData?.message });
+    if (emailCheckError) {
+      setError("loginId", { message: "이메일 중복 체크에 실패했습니다." });
+      setFocus("loginId");
     }
-    if (emailCheckData?.code === 200) {
+    if (emailCheckData && emailCheckData.code === 200) {
       setEmailAuthOpen(true);
+      clearErrors("loginId");
     }
-    setFocus("loginId");
-  }, [emailCheckData, setError]);
+    setEmailCheck("");
+  }, [
+    emailCheckData,
+    setError,
+    clearErrors,
+    setFocus,
+    setEmailAuthOpen,
+    setEmailCheck,
+    emailCheckError,
+  ]);
 
-  //이메일 중복체크, 인증
+  //이메일 인증코드 전송
   const onEmailConfirm = async (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
     const email = getValues("loginId");
@@ -90,14 +122,16 @@ function Join() {
   };
 
   useEffect(() => {
-    if (emailAuthData?.code !== 200) {
-      setError("loginId", { message: emailAuthData?.message });
+    if (emailAuthError) {
+      setError("authCode", { message: "인증코드에 대해 실패했습니다." });
       setValue("authCode", "");
       setCofirmAuthCode(false);
       setFocus("loginId");
-    } else if (emailAuthData?.code === 200) {
+    }
+    if (emailAuthData && emailAuthData.code === 200) {
       clearErrors("loginId");
       setFocus("authCode");
+      setCofirmEmail(true);
     }
   }, [
     emailAuthData,
@@ -106,6 +140,7 @@ function Join() {
     setValue,
     setCofirmAuthCode,
     setCofirmEmail,
+    emailAuthError,
   ]);
 
   //인증번호 체크
@@ -118,14 +153,23 @@ function Join() {
     setValue("authCode", "");
   };
   useEffect(() => {
-    if (authCodeData?.code !== 200) {
+    if (authCodeData && authCodeData?.code !== 200) {
       setCofirmAuthCode(false);
-      setError("authCode", { message: authCodeData?.message });
-    } else if (authCodeData?.code === 200) {
+      setError("authCode", { message: "인증에 실패했습니다." });
+    }
+    if (authCodeData && authCodeData?.code === 200) {
       setCofirmEmail(false);
       setCofirmAuthCode(true);
+      setFocus("nickname");
     }
-  }, [authCodeData, setError]);
+  }, [
+    authCodeData,
+    setError,
+    setCofirmEmail,
+    setCofirmAuthCode,
+    setFocus,
+    errors,
+  ]);
 
   //닉네임 중복 확인
   const onNicknameConfirm = async (event: { stopPropagation: () => void }) => {
@@ -140,17 +184,27 @@ function Join() {
     setNicknameCheck(nickname);
   };
   useEffect(() => {
-    if (nicknameCheckData?.code === 403) {
+    if (nicknameError) {
       setCofirmNickname(false);
-      setFocus("nickname");
       setError("nickname", { message: "중복된 닉네임입니다." });
+      setNicknameCheck("");
+      setFocus("nickname");
     }
-    if (nicknameCheckData?.code === 200) {
+    if (nicknameCheckData && nicknameCheckData?.code === 200) {
       setCofirmNickname(true);
       clearErrors("nickname");
       setFocus("firstName");
+      setNicknameCheck("");
     }
-  }, [nicknameCheckData, setError, setFocus]);
+  }, [
+    nicknameCheckData,
+    nicknameError,
+    setError,
+    setFocus,
+    setNicknameCheck,
+    clearErrors,
+    setCofirmNickname,
+  ]);
 
   //회원가입 승인
   const buttonReady = cofirmNickname && !cofirmEmail && cofirmAuthCode;
@@ -168,12 +222,15 @@ function Join() {
     join(data);
   };
   useEffect(() => {
-    if (joinData?.code !== 200) {
+    if (joinData && joinData?.code !== 200) {
       nav("/errorPage", {
         replace: true,
         state: { code: joinData?.code, message: joinData?.message },
       });
-    } else if (joinData?.code === 200) nav("/");
+    }
+    if (joinData && joinData?.code === 200) {
+      nav("/");
+    }
   }, [joinData, nav]);
   return (
     <div>
@@ -212,8 +269,11 @@ function Join() {
                 중복 확인
               </button>
             ) : (
-              <button onClick={onEmailConfirm} className={`${btnBase}`}>
-                이메일 확인
+              <button
+                onClick={onEmailConfirm}
+                className={`${btnBase} bg-red-500`}
+              >
+                인증코드 전송
               </button>
             )}
           </div>
